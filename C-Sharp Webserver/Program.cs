@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Text;
-using System.Threading;
 
-namespace C_Sharp_Webserver
+namespace Main
 {
     internal class Program
     {
-        public static string ExampleRequest(HttpListenerRequest request)
-        {
-            return $"Reached! Your url is: {request.Url.LocalPath}";
-        }
+        
 
         private static void Main(string[] args)
         {
             var ws = new WebServer.WebServer("http://localhost:8080/");
-            WebServer.WebServer.AddMethod(ExampleRequest);
+
+            WebServer.WebServer.AddMethod(Methods.ExampleRequest);
+            WebServer.WebServer.AddMethod(Methods.RandomNumber);
+
             ws.Run();
             Console.WriteLine("Press a key to exit.");
             Console.ReadKey();
@@ -24,7 +21,7 @@ namespace C_Sharp_Webserver
         }
     }
 }
- 
+
 namespace WebServer
 {
     using System.Text.Json;
@@ -43,15 +40,6 @@ namespace WebServer
             {".pdf", "application/pdf"},
             {".png", "image/png"},
         };
-
-        public static Func<HttpListenerRequest, byte[]> ConvertStringToByteArrayAsMethod(Func<HttpListenerRequest, string> method)
-        {
-            return (HttpListenerRequest) =>
-            {
-                string returnVal = method(HttpListenerRequest);
-                return Encoding.UTF8.GetBytes(returnVal.ToString());
-            };
-        }
 
         public static string GetMime(string filePath)
         {
@@ -72,19 +60,40 @@ namespace WebServer
     public class WebServer
     {
         static Func<HttpListenerRequest, byte[]>[] methods = new Func<HttpListenerRequest, byte[]>[0];
+        static Func<HttpListenerRequest, string>[] stringMethods = new Func<HttpListenerRequest, string>[0];
 
         static readonly string APIPrefix = "/api/";
 
         public static void AddMethod(Func<HttpListenerRequest, string> method)
         {
-            methods = methods.Append(Helpers.ConvertStringToByteArrayAsMethod(method)).ToArray();
-            Console.WriteLine($"Method added! There are now {methods.Length} methods avalible.");
+            stringMethods = stringMethods.Append(method).ToArray();
         }
 
         public static void AddMethod(Func<HttpListenerRequest, byte[]> method)
         {
             methods = methods.Append(method).ToArray();
-            Console.WriteLine($"Method added! There are now {methods.Length} methods avalible.");
+        }
+
+        public static void AddMethod(Func<HttpListenerRequest, string>[] methods)
+        {
+            foreach (var method in methods) AddMethod(method);
+        }
+
+        public static void AddMethod(Func<HttpListenerRequest, byte[]>[] methods)
+        {
+            foreach (var method in methods) AddMethod(method);
+        }
+
+        public static void ListMethods()
+        {
+            string output = "Methods: \n\t";
+            foreach (var method in methods)
+                output += APIPrefix + method.Method.Name.Replace("_", "/") + "/" + "\n\t";
+
+            foreach (var method in stringMethods)
+                output += APIPrefix + method.Method.Name.Replace("_", "/") + "/" + "\n\t";
+
+            Console.WriteLine(output);
         }
 
         public static byte[] SendResponse(HttpListenerRequest request)
@@ -93,6 +102,7 @@ namespace WebServer
 
             // Go through provided methods and, if the method name matches that of the request, return its value.
             if (request.Url.LocalPath.IndexOf(APIPrefix) != -1)
+            {
                 foreach (Func<HttpListenerRequest, byte[]> method in methods)
                 {
                     // Determine what path would request this module.
@@ -104,7 +114,19 @@ namespace WebServer
                     }
                 }
 
-            // TODO: If there was no matching method, assume that this was a content request and read the requested data.
+                // Do the same for the string methods.
+                foreach (var method in stringMethods)
+                {
+                    string ModulePath = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
+                    Console.WriteLine($"Ideal Module Path: {ModulePath}\nActual path: {request.Url.LocalPath}");
+                    if (request.Url.LocalPath.Equals(ModulePath))
+                    {
+                        return Encoding.UTF8.GetBytes(method(request));
+                    }
+                }
+            }
+
+            // If there was no matching method, assume that this was a content request and read the requested data.
             string filePath = request.Url.LocalPath;
 
             if (filePath.EndsWith('/')) filePath += "index.html";
@@ -115,7 +137,7 @@ namespace WebServer
                 return File.ReadAllBytes(_basePath + filePath);
             }
             else return Encoding.UTF8.GetBytes("File not found!");
-            
+
         }
 
         private readonly HttpListener requestListener = new HttpListener();
@@ -159,6 +181,7 @@ namespace WebServer
 
         public void Run()
         {
+            ListMethods();
             ThreadPool.QueueUserWorkItem(o =>
             {
                 Console.WriteLine("Webserver running!");
