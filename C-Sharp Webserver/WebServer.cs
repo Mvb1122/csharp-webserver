@@ -12,16 +12,40 @@ namespace WebServer
     {
         public class ResponseInformation {
             public HttpListenerRequest request;
+            public bool isDataString;
+            public string? dataString;
+            public byte[]? _data;
+            public byte[]? data
+            {
+                get
+                {
+                    if (isDataString) return Encoding.UTF8.GetBytes(dataString);
+                    else return _data;
+                }
+            }
             public string contentType;
 
-            public ResponseInformation(HttpListenerRequest request, string contentType)
+            public ResponseInformation(HttpListenerRequest request, string contentType, byte[] data)
             {
                 this.request = request;
+                this.contentType = contentType;
+                _data = data;
+                isDataString = false;
+            }
+
+            public ResponseInformation(HttpListenerRequest request, string contentType, string dataString)
+            {
+                this.request = request;
+                this.isDataString = true;
+                this.dataString = dataString;
                 this.contentType = contentType;
             }
         }
         static Func<HttpListenerRequest, byte[]>[] methods = new Func<HttpListenerRequest, byte[]>[0];
         static Func<HttpListenerRequest, string>[] stringMethods = new Func<HttpListenerRequest, string>[0];
+
+        // Create a dictionary of methods for increased performance.
+        static Dictionary<string, Func<HttpListenerRequest, object>> combinedMethods = new Dictionary<string, Func<HttpListenerRequest, object>>();
 
         static readonly string APIPrefix = "/api/";
 
@@ -45,14 +69,25 @@ namespace WebServer
             foreach (var method in methods) AddMethod(method);
         }
 
-        public static void ListMethods()
+        /// <summary>
+        /// Adds the methods to the dictionary and also logs them.
+        /// </summary>
+        public static void ListMethodsAndAddToDictionary()
         {
             string output = "Methods: \n\t";
             foreach (var method in methods)
-                output += APIPrefix + method.Method.Name.Replace("_", "/") + "/" + "\n\t";
+            {
+                string name = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
+                output += name + "\n\t";
+                combinedMethods.Add(name, method);
+            }
 
             foreach (var method in stringMethods)
-                output += APIPrefix + method.Method.Name.Replace("_", "/") + "/" + "\n\t";
+            {
+                string name = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
+                output += name + "\n\t";
+                combinedMethods.Add(name, method);
+            }
 
             Console.WriteLine(output);
         }
@@ -66,6 +101,12 @@ namespace WebServer
             // Go through provided methods and, if the method name matches that of the request, return its value.
             if (request.Url.LocalPath.IndexOf(APIPrefix) != -1)
             {
+                // TODO: Extract module path from string, look it up and run it.
+                Func<HttpListenerRequest, object> function = combinedMethods[request.Url.LocalPath];
+                var result = function(request);
+                if (result.GetType().Equals(typeof(string))) return Encoding.UTF8.GetBytes((string) result);
+                else return (byte[])result;
+                /*
                 foreach (Func<HttpListenerRequest, byte[]> method in methods)
                 {
                     // Determine what path would request this module.
@@ -91,6 +132,7 @@ namespace WebServer
                         return Encoding.UTF8.GetBytes(method(request));
                     }
                 }
+                */
             }
 
             // If there was no matching method, assume that this was a content request and read the requested data.
@@ -151,7 +193,7 @@ namespace WebServer
 
         public void Run()
         {
-            ListMethods();
+            ListMethodsAndAddToDictionary();
             ThreadPool.QueueUserWorkItem(o =>
             {
                 Console.WriteLine("Webserver running!");
