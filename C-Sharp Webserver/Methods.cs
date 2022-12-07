@@ -5,7 +5,7 @@ namespace Main
 {
     internal class Methods
     {
-        public static readonly Func<HttpListenerRequest, string>[] Functions = { ExampleRequest };
+        public static readonly Func<HttpListenerRequest, string>[] Functions = { ExampleRequest, v1_FolderedMethod };
         public static readonly Func<HttpListenerRequest, byte[]>[] ByteFunctions = { RandomNumber };
 
         public static string ExampleRequest(HttpListenerRequest request)
@@ -27,6 +27,11 @@ namespace Main
         {
             RandResponse r = new RandResponse();
             return Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(r));
+        }
+
+        public static string v1_FolderedMethod(HttpListenerRequest req)
+        {
+            return "Reached!";
         }
     }
 }

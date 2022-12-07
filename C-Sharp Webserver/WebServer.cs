@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿#define debug
+
+using System.Net;
 using System.Text;
 
 namespace WebServer
@@ -8,6 +10,16 @@ namespace WebServer
 
     public class WebServer
     {
+        public class ResponseInformation {
+            public HttpListenerRequest request;
+            public string contentType;
+
+            public ResponseInformation(HttpListenerRequest request, string contentType)
+            {
+                this.request = request;
+                this.contentType = contentType;
+            }
+        }
         static Func<HttpListenerRequest, byte[]>[] methods = new Func<HttpListenerRequest, byte[]>[0];
         static Func<HttpListenerRequest, string>[] stringMethods = new Func<HttpListenerRequest, string>[0];
 
@@ -47,6 +59,8 @@ namespace WebServer
 
         public static byte[] SendResponse(HttpListenerRequest request)
         {
+            // By default, return JSON as the content type. (It's expected that a module should return JSON.)
+            string contentType = "text/plain";
             if (request == null) return Array.Empty<byte>();
 
             // Go through provided methods and, if the method name matches that of the request, return its value.
@@ -56,7 +70,9 @@ namespace WebServer
                 {
                     // Determine what path would request this module.
                     string ModulePath = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
+#if debug
                     Console.WriteLine($"Ideal Module Path: {ModulePath}\nActual path: {request.Url.LocalPath}");
+#endif
                     if (request.Url.LocalPath.Equals(ModulePath))
                     {
                         return method(request);
@@ -67,7 +83,9 @@ namespace WebServer
                 foreach (var method in stringMethods)
                 {
                     string ModulePath = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
+#if debug
                     Console.WriteLine($"Ideal Module Path: {ModulePath}\nActual path: {request.Url.LocalPath}");
+#endif
                     if (request.Url.LocalPath.Equals(ModulePath))
                     {
                         return Encoding.UTF8.GetBytes(method(request));
@@ -82,11 +100,14 @@ namespace WebServer
 
             if (File.Exists(_basePath + filePath))
             {
+#if debug
                 Console.WriteLine($"Trying to read: {_basePath + filePath}");
+#endif
+                // Set the content type correctly.
+                contentType = Helpers.GetMime(filePath);
                 return File.ReadAllBytes(_basePath + filePath);
             }
             else return Encoding.UTF8.GetBytes("File not found!");
-
         }
 
         private readonly HttpListener requestListener = new HttpListener();
