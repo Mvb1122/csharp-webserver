@@ -13,3 +13,18 @@ C:\Users\drphi\Desktop\Programming Stuff\C# Webserver\csharp-webserver\C-Sharp W
 C:\Users\drphi\Desktop\Programming Stuff\C# Webserver\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.pdb
 C:\Users\drphi\Desktop\Programming Stuff\C# Webserver\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.genruntimeconfig.cache
 C:\Users\drphi\Desktop\Programming Stuff\C# Webserver\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\ref\C-Sharp Webserver.dll
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\bin\Release\net6.0\C-Sharp Webserver.exe
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\bin\Release\net6.0\C-Sharp Webserver.deps.json
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\bin\Release\net6.0\C-Sharp Webserver.runtimeconfig.json
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\bin\Release\net6.0\C-Sharp Webserver.dll
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\bin\Release\net6.0\C-Sharp Webserver.pdb
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.csproj.AssemblyReference.cache
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.GeneratedMSBuildEditorConfig.editorconfig
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.AssemblyInfoInputs.cache
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.AssemblyInfo.cs
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.csproj.CoreCompileInputs.cache
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.dll
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\refint\C-Sharp Webserver.dll
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.pdb
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\C-Sharp Webserver.genruntimeconfig.cache
+D:\FTP\AI Research\csharp-webserver\C-Sharp Webserver\obj\Release\net6.0\ref\C-Sharp Webserver.dll

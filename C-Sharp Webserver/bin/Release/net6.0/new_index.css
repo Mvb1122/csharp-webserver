@@ -1,0 +1,54 @@
+.backgroundImage {
+    position: relative;
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+
+    background-image: url('Index_BG.svg');
+    background-repeat: no-repeat;
+    background-size: 100% 90%;
+
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: row;
+}
+
+.text {
+    display: flex;
+    justify-content: last baseline;
+    align-content: center;
+    flex-direction: column;
+    text-align: center;
+
+    width: 100%;
+    height: 90%;
+
+    line-height: 5vh;
+}
+
+@font-face {
+    font-family: MinionPro-Regular;
+    src: url("MinionPro-Regular.otf");
+    font-display: swap;
+}
+
+body {
+    font-family: MinionPro-Regular;
+    overflow: hidden;
+    line-height: 4vh;
+}
+
+h1 {
+    font-size: 4vh;
+    line-height: 4vh;
+}
+
+h2 {
+    font-size: 3.5vh;
+}
+
+a {
+    font-size: 4vh;
+    line-height: 4vh;
+}

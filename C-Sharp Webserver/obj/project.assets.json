@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\drphi\\Desktop\\Programming Stuff\\C# Webserver\\csharp-webserver\\C-Sharp Webserver\\C-Sharp Webserver.csproj",
+      "projectUniqueName": "D:\\FTP\\AI Research\\csharp-webserver\\C-Sharp Webserver\\C-Sharp Webserver.csproj",
       "projectName": "C-Sharp Webserver",
-      "projectPath": "C:\\Users\\drphi\\Desktop\\Programming Stuff\\C# Webserver\\csharp-webserver\\C-Sharp Webserver\\C-Sharp Webserver.csproj",
+      "projectPath": "D:\\FTP\\AI Research\\csharp-webserver\\C-Sharp Webserver\\C-Sharp Webserver.csproj",
       "packagesPath": "C:\\Users\\drphi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\drphi\\Desktop\\Programming Stuff\\C# Webserver\\csharp-webserver\\C-Sharp Webserver\\obj\\",
+      "outputPath": "D:\\FTP\\AI Research\\csharp-webserver\\C-Sharp Webserver\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\drphi\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -51,7 +51,8 @@
           "net47",
           "net471",
           "net472",
-          "net48"
+          "net48",
+          "net481"
         ],
         "assetTargetFallback": true,
         "warn": true,
@@ -60,7 +61,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.302\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.100\\RuntimeIdentifierGraph.json"
       }
     }
   }

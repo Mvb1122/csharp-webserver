@@ -5,9 +5,12 @@ namespace Main
 {
     internal class Methods
     {
+        public static readonly Func<HttpListenerRequest, string>[] Functions = { ExampleRequest };
+        public static readonly Func<HttpListenerRequest, byte[]>[] ByteFunctions = { RandomNumber };
+
         public static string ExampleRequest(HttpListenerRequest request)
         {
-            return $"Reached! Your url is: {request.Url.LocalPath}";
+            return $"Reached! Your URL is: {request.Url.LocalPath}";
         }
 
         private class RandResponse
