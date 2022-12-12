@@ -7,64 +7,62 @@ namespace WebServer
 {
     using System.IO;
     using System.Reflection;
+    public class ResponseInformation
+    {
+        public HttpListenerRequest request;
+        public bool isDataString;
+        public string? dataString;
+        public byte[]? _data;
+        public byte[]? data
+        {
+            get
+            {
+                if (isDataString) return Encoding.UTF8.GetBytes(dataString);
+                else return _data;
+            }
+        }
+        public string contentType;
+
+        public ResponseInformation(HttpListenerRequest request, string contentType, byte[] data)
+        {
+            this.request = request;
+            this.contentType = contentType;
+            isDataString = false;
+            _data = data;
+        }
+
+        public ResponseInformation(HttpListenerRequest request, string contentType, string dataString)
+        {
+            this.request = request;
+            this.isDataString = true;
+            this.dataString = dataString;
+            this.contentType = contentType;
+        }
+
+        public ResponseInformation(HttpListenerRequest request, object JSONData)
+        {
+            this.request = request;
+            this.isDataString = true;
+            this.contentType = Helpers.GetMime(".json");
+            this.dataString = System.Text.Json.JsonSerializer.Serialize(JSONData);
+        }
+    }
 
     public class WebServer
     {
-        public class ResponseInformation {
-            public HttpListenerRequest request;
-            public bool isDataString;
-            public string? dataString;
-            public byte[]? _data;
-            public byte[]? data
-            {
-                get
-                {
-                    if (isDataString) return Encoding.UTF8.GetBytes(dataString);
-                    else return _data;
-                }
-            }
-            public string contentType;
-
-            public ResponseInformation(HttpListenerRequest request, string contentType, byte[] data)
-            {
-                this.request = request;
-                this.contentType = contentType;
-                _data = data;
-                isDataString = false;
-            }
-
-            public ResponseInformation(HttpListenerRequest request, string contentType, string dataString)
-            {
-                this.request = request;
-                this.isDataString = true;
-                this.dataString = dataString;
-                this.contentType = contentType;
-            }
-        }
-        static Func<HttpListenerRequest, byte[]>[] methods = new Func<HttpListenerRequest, byte[]>[0];
-        static Func<HttpListenerRequest, string>[] stringMethods = new Func<HttpListenerRequest, string>[0];
+        static Func<HttpListenerRequest, ResponseInformation>[] methods = new Func<HttpListenerRequest, ResponseInformation>[0];
 
         // Create a dictionary of methods for increased performance.
-        static Dictionary<string, Func<HttpListenerRequest, object>> combinedMethods = new Dictionary<string, Func<HttpListenerRequest, object>>();
+        static Dictionary<string, Func<HttpListenerRequest, ResponseInformation>> combinedMethods = new Dictionary<string, Func<HttpListenerRequest, ResponseInformation>>();
 
         static readonly string APIPrefix = "/api/";
 
-        public static void AddMethod(Func<HttpListenerRequest, string> method)
-        {
-            stringMethods = stringMethods.Append(method).ToArray();
-        }
-
-        public static void AddMethod(Func<HttpListenerRequest, byte[]> method)
+        public static void AddMethod(Func<HttpListenerRequest, ResponseInformation> method)
         {
             methods = methods.Append(method).ToArray();
         }
 
-        public static void AddMethod(Func<HttpListenerRequest, string>[] methods)
-        {
-            foreach (var method in methods) AddMethod(method);
-        }
-
-        public static void AddMethod(Func<HttpListenerRequest, byte[]>[] methods)
+        public static void AddMethod(Func<HttpListenerRequest, ResponseInformation>[] methods)
         {
             foreach (var method in methods) AddMethod(method);
         }
@@ -76,13 +74,6 @@ namespace WebServer
         {
             string output = "Methods: \n\t";
             foreach (var method in methods)
-            {
-                string name = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
-                output += name + "\n\t";
-                combinedMethods.Add(name, method);
-            }
-
-            foreach (var method in stringMethods)
             {
                 string name = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
                 output += name + "\n\t";
@@ -101,38 +92,11 @@ namespace WebServer
             // Go through provided methods and, if the method name matches that of the request, return its value.
             if (request.Url.LocalPath.IndexOf(APIPrefix) != -1)
             {
-                // TODO: Extract module path from string, look it up and run it.
-                Func<HttpListenerRequest, object> function = combinedMethods[request.Url.LocalPath];
+                // Extract module path from string, look it up and run it, if it exists.
+                Func<HttpListenerRequest, ResponseInformation> function = combinedMethods[request.Url.LocalPath];
                 var result = function(request);
-                if (result.GetType().Equals(typeof(string))) return Encoding.UTF8.GetBytes((string) result);
-                else return (byte[])result;
-                /*
-                foreach (Func<HttpListenerRequest, byte[]> method in methods)
-                {
-                    // Determine what path would request this module.
-                    string ModulePath = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
-#if debug
-                    Console.WriteLine($"Ideal Module Path: {ModulePath}\nActual path: {request.Url.LocalPath}");
-#endif
-                    if (request.Url.LocalPath.Equals(ModulePath))
-                    {
-                        return method(request);
-                    }
-                }
-
-                // Do the same for the string methods.
-                foreach (var method in stringMethods)
-                {
-                    string ModulePath = APIPrefix + method.Method.Name.Replace("_", "/") + "/";
-#if debug
-                    Console.WriteLine($"Ideal Module Path: {ModulePath}\nActual path: {request.Url.LocalPath}");
-#endif
-                    if (request.Url.LocalPath.Equals(ModulePath))
-                    {
-                        return Encoding.UTF8.GetBytes(method(request));
-                    }
-                }
-                */
+                Console.WriteLine($"Response: {result.data}");
+                return result.data;
             }
 
             // If there was no matching method, assume that this was a content request and read the requested data.
@@ -204,17 +168,17 @@ namespace WebServer
                         // Use individual threads for each request, so that one call can't block the whole server. 
                         ThreadPool.QueueUserWorkItem(c =>
                         {
-                            HttpListenerContext? ctx = c as HttpListenerContext;
+                            HttpListenerContext? Request = c as HttpListenerContext;
                             try
                             {
-                                if (ctx == null)
+                                if (Request == null)
                                 {
                                     return;
                                 }
 
-                                var rstr = _responderMethod(ctx.Request);
-                                ctx.Response.ContentLength64 = rstr.Length;
-                                ctx.Response.OutputStream.Write(rstr, 0, rstr.Length);
+                                var APIReturnedValue = _responderMethod(Request.Request);
+                                Request.Response.ContentLength64 = APIReturnedValue.Length;
+                                Request.Response.OutputStream.Write(APIReturnedValue, 0, APIReturnedValue.Length);
                             }
                             catch
                             {
@@ -223,9 +187,9 @@ namespace WebServer
                             finally
                             {
                                 // Always close the stream, regarless of whether or not it was sucessful.
-                                if (ctx != null)
+                                if (Request != null)
                                 {
-                                    ctx.Response.OutputStream.Close();
+                                    Request.Response.OutputStream.Close();
                                 }
                             }
                         }, requestListener.GetContext());

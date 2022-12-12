@@ -7,7 +7,6 @@
             var ws = new WebServer.WebServer("http://localhost:8080/");
 
             WebServer.WebServer.AddMethod(Methods.Functions);
-            WebServer.WebServer.AddMethod(Methods.ByteFunctions);
 
             ws.Run();
             Console.WriteLine("Press a key to exit.");

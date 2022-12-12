@@ -29,6 +29,11 @@
             {".php", "text/html"}
         };
 
+        /// <summary>
+        /// Returns the MIME type of the file type specified.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
         public static string GetMime(string filePath)
         {
             // Get the file extension from the file path
