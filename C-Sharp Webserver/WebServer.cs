@@ -88,14 +88,18 @@ namespace WebServer
             // By default, return JSON as the content type. (It's expected that a module should return JSON.)
             string contentType = "text/plain";
             if (request == null) return Array.Empty<byte>();
+#if debug
+            Console.WriteLine(request.Url.LocalPath);
+#endif
 
             // Go through provided methods and, if the method name matches that of the request, return its value.
             if (request.Url.LocalPath.IndexOf(APIPrefix) != -1)
             {
                 // Extract module path from string, look it up and run it, if it exists.
-                Func<HttpListenerRequest, ResponseInformation> function = combinedMethods[request.Url.LocalPath];
+                string pathToModule = request.Url.LocalPath.Substring(0, request.Url.LocalPath.LastIndexOf('/') + 1);
+                Console.WriteLine($"Path to Module: {pathToModule}");
+                Func<HttpListenerRequest, ResponseInformation> function = combinedMethods[pathToModule];
                 var result = function(request);
-                Console.WriteLine($"Response: {result.data}");
                 return result.data;
             }
 

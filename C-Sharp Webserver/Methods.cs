@@ -7,7 +7,7 @@ namespace Main
 {
     internal class Methods
     {
-        public static readonly Func<HttpListenerRequest, ResponseInformation>[] Functions = { ExampleRequest, v1_FolderedMethod, RandomNumber };
+        public static readonly Func<HttpListenerRequest, ResponseInformation>[] Functions = { ExampleRequest, v1_FolderedMethod, RandomNumber, STDev };
 
         public static ResponseInformation ExampleRequest(HttpListenerRequest request)
         {
@@ -37,14 +37,40 @@ namespace Main
             return response;
         }
 
-        public async static ResponseInformation STDev(HttpListenerRequest req)
+        public static ResponseInformation STDev(HttpListenerRequest req)
         {
-            // Get the list of numbers.
-            List<double> numbers = new List<double>(0);
-            byte[] body = Array.Empty<byte>();
-            await req.InputStream.ReadAsync(body);
+            var response = new STDevResponse()
+            {
+                Sucessful = false,
+                STDev = 0.0
+            };
 
-            return null;
+            if (req.QueryString["numbers"] != null)
+            {
+                // Get the list of numbers.
+                List<float> numbersList = new List<float>(0);
+                string[] numbersNotParsed = req.QueryString.Get("numbers").Split(",");
+                foreach (string number in numbersNotParsed) numbersList.Add(float.Parse(number));
+                numbersList.Sort();
+                float[] numbers = numbersList.ToArray();
+
+                // Find average.
+                float avg = numbers.Average();
+
+                // Find the STDev.
+                float STSum = (float) numbers.Sum(x => Math.Pow(x - avg, 2));
+
+                response.STDev = (float) Math.Sqrt(STSum / numbers.Length);
+                response.Sucessful = true;
+            }
+
+            return new ResponseInformation(req, response);
+        }
+
+        class STDevResponse
+        {
+            public bool Sucessful { get; set; }
+            public double STDev { get; set; }
         }
     }
 }
