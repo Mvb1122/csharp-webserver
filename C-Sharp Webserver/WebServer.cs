@@ -95,7 +95,9 @@ namespace WebServer
                 // Extract module path from string, look it up and run it, if it exists.
                 Func<HttpListenerRequest, ResponseInformation> function = combinedMethods[request.Url.LocalPath];
                 var result = function(request);
+#if debug
                 Console.WriteLine($"Response: {result.data}");
+#endif
                 return result.data;
             }
 
