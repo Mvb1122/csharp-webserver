@@ -37,7 +37,7 @@ namespace Main
             return response;
         }
 
-        public static ResponseInformation STDev(HttpListenerRequest req)
+        public async static Task<ResponseInformation> STDev(HttpListenerRequest req)
         {
             var response = new STDevResponse()
             {
@@ -45,32 +45,47 @@ namespace Main
                 STDev = 0.0
             };
 
-            if (req.QueryString["numbers"] != null)
-            {
-                // Get the list of numbers.
-                List<float> numbersList = new List<float>(0);
-                string[] numbersNotParsed = req.QueryString.Get("numbers").Split(",");
-                foreach (string number in numbersNotParsed) numbersList.Add(float.Parse(number));
-                numbersList.Sort();
-                float[] numbers = numbersList.ToArray();
+            return new ResponseInformation(req, "application/json", "{ \"sucessful\": true }");
+        }
+    }
 
-                // Find average.
-                float avg = numbers.Average();
 
-                // Find the STDev.
-                float STSum = (float) numbers.Sum(x => Math.Pow(x - avg, 2));
+    internal class ServerMethods
+    {
+        public static readonly Func<HttpListenerRequest, ResponseInformation>[] Functions = { Game_ListIPAsServer, Game_UnlistIPAsServer, Game_GetServersList };
 
-                response.STDev = (float) Math.Sqrt(STSum / numbers.Length);
-                response.Sucessful = true;
-            }
+        static string DefaultResponse = "{ \"sucessful\": true }";
 
-            return new ResponseInformation(req, response);
+        private static readonly List<string> Servers = new List<string>(0);
+        public static ResponseInformation Game_ListIPAsServer(HttpListenerRequest req)
+        {
+            // Extract the request's source IP.
+            string ip = req.RemoteEndPoint.Address.ToString();
+            Console.WriteLine($"New Server's IP: {ip}");
+
+            // Add the IP to the list.
+            Servers.Add(ip);
+
+            return new ResponseInformation(req, "application/json", DefaultResponse);
         }
 
-        class STDevResponse
+        public static ResponseInformation Game_UnlistIPAsServer(HttpListenerRequest req)
         {
-            public bool Sucessful { get; set; }
-            public double STDev { get; set; }
+            Servers.Remove(req.RemoteEndPoint.Address.ToString());
+            return new ResponseInformation(req, "application/json", DefaultResponse);
+        }
+
+        public static ResponseInformation Game_GetServersList(HttpListenerRequest req)
+        {
+            return new ResponseInformation(req, new ServersListResponse());
+        }
+
+        class ServersListResponse {
+            public string[] Servers { get; set; }
+            public ServersListResponse()
+            {
+                Servers = ServerMethods.Servers.ToArray();
+            }
         }
     }
 }
