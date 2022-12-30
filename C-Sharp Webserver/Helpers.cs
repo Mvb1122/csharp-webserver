@@ -49,5 +49,13 @@
             // If the file extension is valid and supported, return the corresponding MIME type from the dictionary
             return _mimeTypes[fileExtension];
         }
+
+        public static string DictionaryToJSON(Dictionary<string, string> JSONData)
+        {
+            string data = "{";
+            foreach (string key in JSONData.Keys)
+                data += $"\n\t\"{key}\": \"{JSONData[key]}\",";
+            return data.Substring(0, data.Length - 1) + "\n}";
+        }
     }
 }

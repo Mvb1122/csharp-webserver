@@ -34,7 +34,7 @@ namespace WebServer
         public ResponseInformation(HttpListenerRequest request, string contentType, string dataString)
         {
             this.request = request;
-            this.isDataString = true;
+            isDataString = true;
             this.dataString = dataString;
             this.contentType = contentType;
         }
@@ -42,9 +42,20 @@ namespace WebServer
         public ResponseInformation(HttpListenerRequest request, object JSONData)
         {
             this.request = request;
-            this.isDataString = true;
-            this.contentType = Helpers.GetMime(".json");
-            this.dataString = System.Text.Json.JsonSerializer.Serialize(JSONData);
+            isDataString = true;
+            contentType = Helpers.GetMime(".json");
+            dataString = System.Text.Json.JsonSerializer.Serialize(JSONData);
+        }
+
+        public ResponseInformation(HttpListenerRequest request, Dictionary<string, string> JSONData)
+        {
+            // Convert the given data into a JSON string.
+            string data = Helpers.DictionaryToJSON(JSONData);
+
+            this.request = request;
+            isDataString = true;
+            contentType = Helpers.GetMime(".json");
+            dataString = data;
         }
     }
 
@@ -123,6 +134,15 @@ namespace WebServer
         private readonly HttpListener requestListener = new HttpListener();
         private readonly Func<HttpListenerRequest, byte[]> _responderMethod;
         private static string _basePath = "./";
+
+        /// <summary>
+        /// The base path from which the server reads from.
+        /// </summary>
+        public static string BasePath { get
+            {
+                return _basePath;
+            } 
+        }
 
         public WebServer(IReadOnlyCollection<string> prefixes, Func<HttpListenerRequest, byte[]> method)
         {
