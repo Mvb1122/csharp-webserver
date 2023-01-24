@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using ResponseInformation = WebServer.ResponseInformation;
+using Helpers= WebServer.Helpers;
 
 
 namespace Main
@@ -11,7 +12,7 @@ namespace Main
 
         public static ResponseInformation ExampleRequest(HttpListenerRequest request)
         {
-            ResponseInformation response = new(request, WebServer.Helpers.GetMime(".txt"), $"Reached! Your URL is: {request.Url.LocalPath}");
+            ResponseInformation response = new(request, Helpers.GetMime(".txt"), $"Reached! Your URL is: {request.Url.LocalPath}");
             return response;
         }
 
@@ -28,7 +29,7 @@ namespace Main
         public static ResponseInformation RandomNumber(HttpListenerRequest request)
         {
             RandResponse r = new RandResponse();
-            return new ResponseInformation(request, WebServer.Helpers.GetMime(".json"), Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(r)));
+            return new ResponseInformation(request, Helpers.GetMime(".json"), Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(r)));
         }
 
         public static ResponseInformation v1_FolderedMethod(HttpListenerRequest req)
@@ -37,7 +38,7 @@ namespace Main
             return response;
         }
 
-        public async static Task<ResponseInformation> STDev(HttpListenerRequest req)
+        public static ResponseInformation STDev(HttpListenerRequest req)
         {
             var response = new STDevResponse()
             {
@@ -46,6 +47,12 @@ namespace Main
             };
 
             return new ResponseInformation(req, "application/json", "{ \"sucessful\": true }");
+        }
+
+        public class STDevResponse
+        {
+            public bool Sucessful { get; set; }
+            public double STDev { get; set; }
         }
     }
 
