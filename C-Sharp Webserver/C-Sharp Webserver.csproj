@@ -9,6 +9,8 @@
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <BaseOutputPath>bin\</BaseOutputPath>
     <Configurations>Debug;Release;x64</Configurations>
+    <SignAssembly>False</SignAssembly>
+    <PackageId>$(AssemblyName)</PackageId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

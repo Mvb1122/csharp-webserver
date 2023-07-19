@@ -46,6 +46,11 @@ namespace WebServer
             this.contentType = Helpers.GetMime(".json");
             this.dataString = System.Text.Json.JsonSerializer.Serialize(JSONData);
         }
+
+        public ResponseInformation(HttpListenerRequest request, bool IsSuccessful) : this(request, Helpers.GetMime(".json"), "{ \"successful\": " + IsSuccessful.ToString().ToLower() + " }")
+        {
+            
+        }
     }
 
     public class WebServer
@@ -87,7 +92,7 @@ namespace WebServer
         {
             // By default, return JSON as the content type. (It's expected that a module should return JSON.)
             string contentType = "text/plain";
-            if (request == null) return Array.Empty<byte>();
+            if (request == null) return Encoding.UTF8.GetBytes("No request! 404");
 
             // Go through provided methods and, if the method name matches that of the request, return its value.
             if (request.Url.LocalPath.IndexOf(APIPrefix) != -1)
@@ -95,9 +100,15 @@ namespace WebServer
                 // Extract module path from string, look it up and run it, if it exists.
                 Func<HttpListenerRequest, ResponseInformation> function = combinedMethods[request.Url.LocalPath];
                 var result = function(request);
+
 #if debug
-                Console.WriteLine($"Response: {result.data}");
+                /*
+                if (request.HttpMethod == "POST")
+                    Console.WriteLine($"Data from client: {Helpers.GetRequestPostData(request)}");
+                */
+                Console.WriteLine($"Response from {request.Url.LocalPath}: {result.data}");
 #endif
+
                 return result.data;
             }
 
@@ -120,7 +131,7 @@ namespace WebServer
 
         private readonly HttpListener requestListener = new HttpListener();
         private readonly Func<HttpListenerRequest, byte[]> _responderMethod;
-        private static string _basePath = "./";
+        public static string _basePath = "./";
 
         public WebServer(IReadOnlyCollection<string> prefixes, Func<HttpListenerRequest, byte[]> method)
         {
@@ -132,7 +143,7 @@ namespace WebServer
 
             if (method == null)
             {
-                throw new ArgumentException("responder method required");
+                throw new ArgumentException("Responder method required");
             }
 
             foreach (var s in prefixes)
@@ -157,6 +168,11 @@ namespace WebServer
             Console.WriteLine("Initializing web server with default response method!");
         }
 
+        public WebServer(string[] prefixes) : this(SendResponse, prefixes)
+        {
+            Console.WriteLine("Initializing web server with default response method!");
+        }
+
         public void Run()
         {
             ListMethodsAndAddToDictionary();
@@ -171,24 +187,29 @@ namespace WebServer
                         ThreadPool.QueueUserWorkItem(c =>
                         {
                             HttpListenerContext? Request = c as HttpListenerContext;
+                            if (Request == null)
+                            {
+                                return;
+                            }
+
                             try
                             {
-                                if (Request == null)
-                                {
-                                    return;
-                                }
 
                                 var APIReturnedValue = _responderMethod(Request.Request);
                                 Request.Response.ContentLength64 = APIReturnedValue.Length;
                                 Request.Response.OutputStream.Write(APIReturnedValue, 0, APIReturnedValue.Length);
                             }
-                            catch
+                            catch (Exception e)
                             {
-                                // An exception here is ignored because it means there was an issue turning the request data into bytes. 
+                                // An exception here means there was an issue turning the request data into bytes, so state as such.
+                                var APIReturnedValue = Encoding.UTF8.GetBytes($"There was an error running this request! Error:\n{e}");
+                                Console.WriteLine($"Error in request!\n{e}");
+                                Request.Response.ContentLength64 = APIReturnedValue.Length;
+                                Request.Response.OutputStream.Write(APIReturnedValue, 0, APIReturnedValue.Length);
                             }
                             finally
                             {
-                                // Always close the stream, regarless of whether or not it was sucessful.
+                                // Always close the stream, regardless of whether or not it was successful.
                                 if (Request != null)
                                 {
                                     Request.Response.OutputStream.Close();

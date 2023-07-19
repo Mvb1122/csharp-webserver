@@ -2,6 +2,10 @@
 {
     using System.Text.Json;
     using System.IO;
+    using System.Net;
+    using Main;
+    using System;
+    using System.Diagnostics;
 
     public class Helpers
     {
@@ -48,6 +52,48 @@
 
             // If the file extension is valid and supported, return the corresponding MIME type from the dictionary
             return _mimeTypes[fileExtension];
+        }
+
+        /// <param name="request">The request to be parsed.</param>
+        /// <returns>Returns the body of the post request passed, or null if no data.</returns>
+        public static string GetRequestPostData(HttpListenerRequest request)
+        {
+            if (!request.HasEntityBody)
+            {
+                return null;
+            }
+            using (System.IO.Stream body = request.InputStream) // here we have data
+            {
+                using (var reader = new System.IO.StreamReader(body, request.ContentEncoding))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
+
+        public static T? ReadJSONFileToObject<T>(string path)
+        {
+            // Read file to string. 
+            // DEBUG: Write out character codes.
+            // foreach (char c in path.ToCharArray()) Console.WriteLine($"Character: {c}, Code: {(int) c}");
+            path = $"{WebServer._basePath}/{path}";
+            // Console.WriteLine($"Trying to read {path} !");
+            string file = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<T>(file);
+        }
+
+        internal static bool WriteObjecToJSON<T>(string Path, T user)
+        {
+            // First, convert the object to JSON.
+            string JSONData = JsonSerializer.Serialize(user);
+            try
+            {
+                File.WriteAllText(Path, JSONData);
+                return true; 
+            } catch (Exception ex)
+            {
+                return false;
+            }
         }
     }
 }
