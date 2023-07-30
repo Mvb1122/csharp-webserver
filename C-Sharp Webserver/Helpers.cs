@@ -14,7 +14,7 @@
             return JsonSerializer.Serialize(o);
         }
 
-        private static Dictionary<string, string> _mimeTypes = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> _mimeTypes = new()
         {
             {".txt", "text/plain"},
             {".html", "text/html"},
@@ -62,13 +62,9 @@
             {
                 return null;
             }
-            using (System.IO.Stream body = request.InputStream) // here we have data
-            {
-                using (var reader = new System.IO.StreamReader(body, request.ContentEncoding))
-                {
-                    return reader.ReadToEnd();
-                }
-            }
+            using System.IO.Stream body = request.InputStream; // here we have data
+            using var reader = new System.IO.StreamReader(body, request.ContentEncoding);
+            return reader.ReadToEnd();
         }
 
         public static T? ReadJSONFileToObject<T>(string path)
@@ -90,7 +86,7 @@
             {
                 File.WriteAllText(Path, JSONData);
                 return true; 
-            } catch (Exception ex)
+            } catch
             {
                 return false;
             }

@@ -1,9 +1,13 @@
-﻿using System.Net;
+﻿// Ignore Spelling: req Unlist ILR Foldered
+
+using System.Net;
 using System.Text;
 using ResponseInformation = WebServer.ResponseInformation;
 using Helpers= WebServer.Helpers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Nodes;
 
 namespace Main
 {
@@ -11,25 +15,32 @@ namespace Main
     {
         public static readonly Func<HttpListenerRequest, ResponseInformation>[] Functions = { ExampleRequest, v1_FolderedMethod, RandomNumber, STDev };
 
-        public static ResponseInformation ExampleRequest(HttpListenerRequest request)
+        public static ResponseInformation ExampleRequest(HttpListenerRequest? request)
         {
-            ResponseInformation response = new(request, Helpers.GetMime(".txt"), $"Reached! Your URL is: {request.Url.LocalPath}");
-            return response;
+            if (request != null && request.Url != null)
+            {
+                ResponseInformation? response = new(request, Helpers.GetMime(".txt"), $"Reached! Your URL is: {request.Url.LocalPath}");
+                return response;
+            }
+            else
+            {
+                return new ResponseInformation(request, false);
+            }
         }
 
         private class RandResponse
         {
-            public int num { get; set; }
+            public int Num { get; set; }
 
             public RandResponse()
             {
-                num = new Random().Next(int.MaxValue);
+                Num = new Random().Next(int.MaxValue);
             }
         }
 
         public static ResponseInformation RandomNumber(HttpListenerRequest request)
         {
-            RandResponse r = new RandResponse();
+            RandResponse r = new();
             return new ResponseInformation(request, Helpers.GetMime(".json"), Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(r)));
         }
 
@@ -41,18 +52,20 @@ namespace Main
 
         public static ResponseInformation STDev(HttpListenerRequest req)
         {
+            /*
             var response = new STDevResponse()
             {
-                Sucessful = false,
+                Successful = false,
                 STDev = 0.0
             };
+            */
 
             return new ResponseInformation(req, "application/json", "{ \"successful\": true }");
         }
 
         public class STDevResponse
         {
-            public bool Sucessful { get; set; }
+            public bool Successful { get; set; }
             public double STDev { get; set; }
         }
     }
@@ -60,12 +73,26 @@ namespace Main
 
     internal class ServerMethods
     {
-        public static readonly Func<HttpListenerRequest, ResponseInformation>[] Functions = { game_ListIPAsServer, game_UnlistIPAsServer, game_GetServersList, game_GetItemsList, game_GetInventory, game_MakeNewUser, game_UpdateInventory, game_GetLoginToken, game_WriteFile, game_GetPrefab };
+        public static readonly Func<HttpListenerRequest, ResponseInformation>[] Functions =
+        {
+            MEngines_ListIPAsServer,
+            MEngines_UnlistIPAsServer,
+            MEngines_GetServersList,
+            MEngines_GetItemsList,
+            MEngines_GetInventory,
+            MEngines_MakeNewUser,
+            MEngines_UpdateInventory,
+            MEngines_GetLoginToken,
+            MEngines_WriteFile,
+            MEngines_GetPrefab,
+            MEngines_GetCities
+        };
 
-        static string DefaultResponse = "{ \"successful\": true }";
+        static readonly string DefaultResponse = "{ \"successful\": true }";
+        static readonly string PrefabPath = WebServer.WebServer._basePath + "\\Prefabs\\";
 
-        private static readonly List<string> Servers = new List<string>(0);
-        public static ResponseInformation game_ListIPAsServer(HttpListenerRequest req)
+        private static readonly List<string> Servers = new(0);
+        public static ResponseInformation MEngines_ListIPAsServer(HttpListenerRequest req)
         {
             // Extract the request's source IP.
             string ip = req.RemoteEndPoint.Address.ToString();
@@ -77,13 +104,13 @@ namespace Main
             return new ResponseInformation(req, "application/json", DefaultResponse);
         }
 
-        public static ResponseInformation game_UnlistIPAsServer(HttpListenerRequest req)
+        public static ResponseInformation MEngines_UnlistIPAsServer(HttpListenerRequest req)
         {
             Servers.Remove(req.RemoteEndPoint.Address.ToString());
             return new ResponseInformation(req, "application/json", DefaultResponse);
         }
 
-        public static ResponseInformation game_GetServersList(HttpListenerRequest req)
+        public static ResponseInformation MEngines_GetServersList(HttpListenerRequest req)
         {
             return new ResponseInformation(req, new ServersListResponse());
         }
@@ -97,20 +124,20 @@ namespace Main
         }
 
         public static ItemsListResponse ILR = new();
-        public static ResponseInformation game_GetItemsList(HttpListenerRequest req)
+        public static ResponseInformation MEngines_GetItemsList(HttpListenerRequest req)
         {
             return new ResponseInformation(req, ILR);
         }
 
         // ExampleData: { Token: 1234 } 
         public class TokenReq { public int Token { get; set; } }
-        public static ResponseInformation game_GetInventory(HttpListenerRequest req)
+        public static ResponseInformation MEngines_GetInventory(HttpListenerRequest req)
         {
             //resp.Add("ReqType", req.HttpMethod);
             if (req.HttpMethod == "POST")
             {
                 string body = Helpers.GetRequestPostData(req);
-                TokenReq t = JsonSerializer.Deserialize<TokenReq>(body);
+                TokenReq? t = JsonSerializer.Deserialize<TokenReq>(body);
 
                 // Read back the user's inventory and send it to them.
                 if (t != null && t.Token != 0)
@@ -118,10 +145,10 @@ namespace Main
                     string username = LoginTokens[t.Token];
                     Console.WriteLine("Attempting to get the inventory of " +  username);
 
-                    User u = User.MakeUserFromUserName(username);
+                    User? u = User.MakeUserFromUserName(username);
                     if (u != null)
                     {
-                        Inventory i = new Inventory()
+                        Inventory i = new()
                         {
                             Items = u.Inventory
                         };
@@ -141,27 +168,30 @@ namespace Main
         class TokenResponse { public int token { get; set; } public bool successful { get; set; } }
         // ExampleData: { Username: "Admin", Password: "Debug" }
         // ExampleReturnedData: { Successful: true, Token: 1234 }
-        public static ResponseInformation game_GetLoginToken(HttpListenerRequest req)
+        public static ResponseInformation MEngines_GetLoginToken(HttpListenerRequest req)
         {
             string body = Helpers.GetRequestPostData(req);
             if (req.HttpMethod == "POST" && body != null)
             {
-                LoginReq ob = JsonSerializer.Deserialize<LoginReq>(body);
+                LoginReq? ob = JsonSerializer.Deserialize<LoginReq>(body);
 
                 // Check the user's information 
-                User u = User.MakeUserFromUserName(ob.Username);
-                if (u != null)
+                if (ob != null)
                 {
-                    if (u.Password == ob.Password)
+                    User? u = User.MakeUserFromUserName(ob.Username);
+                    if (u != null)
                     {
-                        // Create a token association with this user's username and return it.
-                        int token = (int)Math.Floor(new Random().NextDouble() * 100000);
-                        LoginTokens.Add(token, u.Username);
-                        TokenResponse resp = new() { 
-                            token = token,
-                            successful = true,
-                        };
-                        return new ResponseInformation(req, resp);
+                        if (u.Password == ob.Password)
+                        {
+                            // Create a token association with this user's username and return it.
+                            int token = (int)Math.Floor(new Random().NextDouble() * 100000);
+                            LoginTokens.Add(token, u.Username);
+                            TokenResponse resp = new() { 
+                                token = token,
+                                successful = true,
+                            };
+                            return new ResponseInformation(req, resp);
+                        }
                     }
                 }
             }
@@ -172,14 +202,14 @@ namespace Main
 
         // ExampleData: { Username: "Admin", Password: "Debug" }
         // ExampleReturnedData: { Successful: true, Token: 1234 }
-        public static ResponseInformation game_MakeNewUser(HttpListenerRequest req)
+        public static ResponseInformation MEngines_MakeNewUser(HttpListenerRequest req)
         {
             string body = Helpers.GetRequestPostData(req);
             if (req.HttpMethod == "POST" && body != null)
             {
                 // First, create a new user from the provided data.
                 Console.WriteLine(body);
-                LoginReq ob = JsonSerializer.Deserialize<LoginReq>(body);
+                LoginReq? ob = JsonSerializer.Deserialize<LoginReq>(body);
                 if (ob != null)
                 {
                     User.MakeNewUser(ob.Username, ob.Password);
@@ -203,37 +233,43 @@ namespace Main
         // **Replaces** whole inventory content!!!
         // ExampleData: { Token: 1234, Inventory: [{ Item: Coal, Count: 123}, etc...] }
         // ExampleReturnedData: { Successful: true, Token: 1234 }
-        public static ResponseInformation game_UpdateInventory(HttpListenerRequest req)
+        public static ResponseInformation MEngines_UpdateInventory(HttpListenerRequest req)
         {
             string body = Helpers.GetRequestPostData(req);
             if (req.HttpMethod == "POST" && body != null)
             {
-                InventoryUpdateRequest ob = JsonSerializer.Deserialize<InventoryUpdateRequest>(body);
+                InventoryUpdateRequest? ob = JsonSerializer.Deserialize<InventoryUpdateRequest>(body);
 
                 // Get the user.
-                string username = LoginTokens[ob.Token]; 
-                User user = User.MakeUserFromUserName(username);
-                user.Inventory = ob.Inventory;
+                if (ob != null)
+                {
+                    string username = LoginTokens[ob.Token]; 
+                    User? user = User.MakeUserFromUserName(username);
+                    if (user != null)
+                    {
+                        user.Inventory = ob.Inventory;
 
-                // Push changes to file.
-                User.WriteToFile(user);
-                return new ResponseInformation(req, true);
+                        // Push changes to file.
+                        User.WriteToFile(user);
+                        return new ResponseInformation(req, true);
+                    }
+                }
             }
 
             return new ResponseInformation(req, false);
         }
 
         public class FileRequest { public string Path { get; set; } public string Data { get; set; } }
-        public static ResponseInformation game_WriteFile(HttpListenerRequest req)
+        public static ResponseInformation MEngines_WriteFile(HttpListenerRequest req)
         {
             string body = Helpers.GetRequestPostData(req);
             if (req.HttpMethod == "POST" && body != null)
             {
                 // Console.WriteLine($"Attempting to write a file with {body}");
-                FileRequest fr = JsonSerializer.Deserialize<FileRequest>(body);
+                FileRequest? fr = JsonSerializer.Deserialize<FileRequest>(body);
                 if (fr != null)
                 {
-                    string path = fr.Path;
+                    string path = PrefabPath + fr.Path;
                     string data = fr.Data;
                     if (path != null &&  data != null)
                     {
@@ -247,12 +283,12 @@ namespace Main
             return new ResponseInformation(req, false);
         }
 
-        public static ResponseInformation game_GetPrefab(HttpListenerRequest req)
+        public static ResponseInformation MEngines_GetPrefab(HttpListenerRequest req)
         {
             string body = Helpers.GetRequestPostData(req);
             if (req.HttpMethod == "POST" && body != null)
             {
-                FileRequest fr = JsonSerializer.Deserialize<FileRequest>(body);
+                FileRequest? fr = JsonSerializer.Deserialize<FileRequest>(body);
                 if (fr != null)
                 {
                     string path = fr.Path;
@@ -267,5 +303,93 @@ namespace Main
 
             return new ResponseInformation(req, false);
         }
+
+        public class PrefabList { public CityInWorld[] Prefabs { get; set; } }
+        public class CityInWorld
+        {
+            public string Path {get; set;}
+            public float[] Location { get; set;}
+            public bool HostedAlready { get; set;}
+        }
+        public static ResponseInformation MEngines_GetCities(HttpListenerRequest req)
+        {
+            // Search for files which include City in the name of their prefab 
+            List<CityInWorld> cities = new();
+            Console.WriteLine(PrefabPath);
+            foreach (string f in Directory.GetFiles(PrefabPath)) 
+                // If this file does contain city, then add it to the list, minus the path (just send back the file name.)
+                if (f.Contains("City"))
+                {
+                    CityInWorld c = new CityInWorld()
+                    {
+                        Path = f[(f.LastIndexOf('\\') + 1)..],
+                        HostedAlready = false,
+                        Location = GetRootLocation(f)
+                    };
+                    cities.Add(c);
+                }
+
+            return new ResponseInformation(req, new PrefabList() { Prefabs = cities.ToArray() });
+        }
+
+        private static float[]? GetRootLocation(string Path)
+        {
+            // Read in the selected city.
+            CPOProxy proxy = CPOProxy.CPOFrom(Path);
+            if (proxy == null) return null;
+            return new float[3] { proxy.Transform.PX, proxy.Transform.PY, proxy.Transform.PZ };
+        }
+    }
+
+
+    public class CPOProxy
+    {
+        private string _name;
+        public string Name
+        {
+            get
+            { return _name; }
+            set
+            {
+                _name = value;
+            }
+        }
+
+        public Transform Transform { get; set; }
+        
+        public CPOProxy[] Children { get; set; }
+
+        private string path;
+        public static CPOProxy? CPOFrom(string path)
+        {
+            if (File.Exists(path))
+            {
+                
+                CPOProxy? CPO = JsonSerializer.Deserialize<CPOProxy>(File.ReadAllText(path));
+                if (CPO != null)
+                    CPO.path = path;
+                return CPO;
+            }
+            else return null;
+        }
+
+        public void Write() => Write(path);
+        public void Write(string path)
+        {
+            string CPO = JsonSerializer.Serialize(this);
+            File.WriteAllTextAsync(path, CPO);
+        }
+    }
+    public class Transform
+    {
+        public float _PX, _PY, _PZ, _RX, _RY, _RZ, _SX, _SY, _SZ;
+        public float PX { get { return _PX; } set { _PX = value; } }
+        public float PY { get { return _PY; } set { _PY = value; } }
+        public float PZ { get { return _PZ; } set { _PZ = value; } }
+        public float RX { get { return _RX; } set { _RX = value; } }
+        public float RZ { get { return _RY; } set { _RY = value; } }
+        public float SX { get { return _SX; } set { _SX = value; } }
+        public float SY { get { return _SY; } set { _SY = value; } }
+        public float SZ { get { return _SZ; } set { _SZ = value; } }
     }
 }

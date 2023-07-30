@@ -16,7 +16,8 @@
                 new Item { Name = "Deck Plating", Description = "Use it as armor. Use it as flooring. Use it as roofing. Use it as whatever, I don't care.", CraftingRecipe = new ItemCount[] { new ItemCount() { Item = "Salvage", Count = 8 } }, Type = "Buildable", PrefabURL = "Assets/Prefabs/Deck_Plate_1.prefab" },
                 new Item { Name = "Construction Gun", Description = "This beut was slapped together out of some old tech and a spare revolver; it lets you construct stuff, provided that you have the materials it needs in your bag.", CraftingRecipe = null, Type = "Weapon", PrefabURL = "Assets/Prefabs/Construction Gun.prefab" },
                 new Item { Name = "Pristine Construction Gun", Description = "Much like its modern equivalent, this lets you construct devices, but the pristine old-tech lets you build much more precise devices.", CraftingRecipe = null, Type = "Weapon", PrefabURL = "Assets/Prefabs/Pristine Construction Gun.prefab" },
-                new Item { Name = "Default Cube", Description = "The ancients apparently worshiped this shape using a Shrine-Program called Blender.", CraftingRecipe = new ItemCount[] { new ItemCount() { Item = "Salvage", Count = 3 } }, Type = "Buildable", PrefabURL = "Assets/Prefabs/Cube.prefab" }
+                new Item { Name = "Default Cube", Description = "The ancients apparently worshiped this shape using a Shrine-Program called Blender.", CraftingRecipe = new ItemCount[] { new ItemCount() { Item = "Salvage", Count = 3 } }, Type = "Buildable", PrefabURL = "Assets/Prefabs/Cube.prefab" },
+                new Item { Name = "Treads", Description = "Wow, look at it go. It's the basic-bitch tank tread thing.", CraftingRecipe = new ItemCount[] { new ItemCount() { Item = "Salvage", Count = 20 } }, Type = "Buildable", PrefabURL = "Assets/Prefabs/Tread_L.prefab"}
             };
             Items = items.ToArray();
         }
