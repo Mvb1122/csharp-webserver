@@ -28,6 +28,8 @@ namespace Main
             return user;
         }
 
+        public bool WriteToFile() => WriteToFile(this);
+
         public static bool WriteToFile(User user) {
             Console.WriteLine($"User: {user.Username}, {user.Password}");
             return Helpers.WriteObjecToJSON($"Users/{user.Username}.json", user);

@@ -250,7 +250,8 @@ namespace Main
                         user.Inventory = ob.Inventory;
 
                         // Push changes to file.
-                        User.WriteToFile(user);
+                        user.WriteToFile();
+
                         return new ResponseInformation(req, true);
                     }
                 }
@@ -291,7 +292,7 @@ namespace Main
                 FileRequest? fr = JsonSerializer.Deserialize<FileRequest>(body);
                 if (fr != null)
                 {
-                    string path = fr.Path;
+                    string path = PrefabPath + fr.Path;
                     if (path != null)
                     {
                         // Read the data.
