@@ -77,9 +77,16 @@ namespace Main
             Console.WriteLine($"New Server's IP: {ip}");
 
             // Add the IP to the list.
-            Servers.Add(ip);
+                // Tell the client which port to host on. (Should host on a random valid port, where the client should use UPnP to open the port.)
+            string port = new Random().Next(1, 65535).ToString();
+            Servers.Add($"{ip}:{port}");
 
-            return new ResponseInformation(req, "application/json", DefaultResponse);
+            Dictionary<string, string> response = new Dictionary<string, string>();
+            response.Add("sucessful", "true");
+            response.Add("Port", port);
+
+
+            return new ResponseInformation(req, response);
         }
 
         public static ResponseInformation Game_UnlistIPAsServer(HttpListenerRequest req)

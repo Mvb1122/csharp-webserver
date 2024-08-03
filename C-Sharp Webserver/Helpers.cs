@@ -1,4 +1,6 @@
-﻿namespace WebServer
+﻿using System;
+
+namespace WebServer
 {
     using System.Text.Json;
     using System.IO;
@@ -55,7 +57,41 @@
             string data = "{";
             foreach (string key in JSONData.Keys)
                 data += $"\n\t\"{key}\": \"{JSONData[key]}\",";
-            return data.Substring(0, data.Length - 1) + "\n}";
+            return string.Concat(data.AsSpan(0, data.Length - 1), "\n}");
+        }
+        public static float SumArray(float[] input)
+        {
+            float sum = 0f;
+            foreach (float value in input) sum += value;
+            return sum;
+        }
+
+        public static bool ArrayContains<T>(T[] array, T val, out int index)
+        {
+            for (int i = 0; i < array.Length; i++) if (array[i].Equals(val))
+                {
+                    index = i;
+                    return true;
+                }
+
+            index = -1;
+            return false;
+        }
+
+        public static int[] GetCharacterIndexesInString(char character, string stringToSearch)
+        {
+            List<int> indexes = new List<int>(0);
+            for (int i = 0; i < stringToSearch.Length; i++) if (stringToSearch.ToCharArray()[i] == character) indexes.Add(i);
+            return indexes.ToArray();
+        }
+
+        public static string ReverseString(string st)
+        {
+            // Change the string into an array, flip the array, and then turn it back into a string and send it back.
+            char[] s = st.ToCharArray();
+            Array.Reverse(s);
+            return new string(s);
         }
     }
+
 }

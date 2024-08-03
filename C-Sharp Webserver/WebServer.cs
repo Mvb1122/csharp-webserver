@@ -94,7 +94,7 @@ namespace WebServer
             Console.WriteLine(output);
         }
 
-        public static byte[] SendResponse(HttpListenerRequest request)
+        public static byte[]? SendResponse(HttpListenerRequest request)
         {
             // By default, return JSON as the content type. (It's expected that a module should return JSON.)
             string contentType = "text/plain";
@@ -110,7 +110,7 @@ namespace WebServer
                 string pathToModule = request.Url.LocalPath.Substring(0, request.Url.LocalPath.LastIndexOf('/') + 1);
                 Console.WriteLine($"Path to Module: {pathToModule}");
                 Func<HttpListenerRequest, ResponseInformation> function = combinedMethods[pathToModule];
-                var result = function(request);
+                ResponseInformation result = function(request);
                 return result.data;
             }
 
@@ -204,9 +204,10 @@ namespace WebServer
                                 Request.Response.ContentLength64 = APIReturnedValue.Length;
                                 Request.Response.OutputStream.Write(APIReturnedValue, 0, APIReturnedValue.Length);
                             }
-                            catch
+                            catch (Exception e)
                             {
                                 // An exception here is ignored because it means there was an issue turning the request data into bytes. 
+                                Console.WriteLine(e);
                             }
                             finally
                             {
